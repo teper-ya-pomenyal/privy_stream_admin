@@ -9,6 +9,8 @@ export const isImage = (f: File) => IMAGE_EXT.includes(extOf(f.name)) || f.type.
 
 export interface AudioMeta {
   title: string;
+  // Название есть в тегах файла, а не выведено из имени файла.
+  titleFromTags: boolean;
   artist: string;
   album: string;
   year: string;
@@ -67,6 +69,7 @@ export async function probeAudio(file: File): Promise<AudioMeta> {
   const explicitSource = explicitFrom(mm.native as Record<string, { id: string; value: unknown }[]>);
   return {
     title: c.title?.trim() || fallback.title,
+    titleFromTags: !!c.title?.trim(),
     artist: (c.albumartist || c.artist || '').trim(),
     album: (c.album ?? '').trim(),
     year: c.year ? String(c.year) : '',

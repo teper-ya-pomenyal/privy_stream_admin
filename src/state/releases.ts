@@ -145,7 +145,8 @@ export function addToDraft(ids?: string[]) {
           id: q.id,
           file: q.file,
           meta: q.meta!,
-          title: q.meta!.title,
+          // Имя файла в название не подставляем: без тегов владелец вводит его сам.
+          title: q.meta!.titleFromTags ? q.meta!.title : '',
           explicit: q.meta!.explicit,
           progress: 0,
           phase: 'idle' as const,
@@ -243,6 +244,8 @@ export async function publishDraft(): Promise<PublishResult> {
   if (d0.publishing) throw new Error('публикация уже идёт');
   if (!d0.title.trim() || !d0.artist.trim()) throw new Error('нужны название и исполнитель');
   if (!d0.tracks.length) throw new Error('в черновике нет треков');
+  const untitled = d0.tracks.findIndex((t) => !t.title.trim());
+  if (untitled >= 0) throw new Error(`у трека ${untitled + 1} нет названия`);
 
   setDraft((d) => ({ ...d, publishing: true, error: undefined }));
   try {
@@ -270,7 +273,7 @@ export async function publishDraft(): Promise<PublishResult> {
         if (!trackUuid) {
           patchTrack(t.id, { phase: 'index', error: undefined });
           const created = await catalog.addTrack({
-            track_name: t.title.trim() || t.meta.title,
+            track_name: t.title.trim(),
             artist_uuid: artistUuid,
             album_uuid: albumUuid,
             explicit: t.explicit,

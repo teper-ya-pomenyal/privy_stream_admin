@@ -144,7 +144,8 @@ export function Releases() {
   const probing = queue.filter((q) => q.stage === 'PROBE').length;
   const totalMs = draft.tracks.reduce((s, t) => s + (t.meta.durationMs ?? 0), 0);
   const type = releaseType((existing?.basePosition ?? 0) + draft.tracks.length);
-  const canPublish = !!draft.title.trim() && !!draft.artist.trim() && draft.tracks.length > 0 && !draft.publishing;
+  const untitled = draft.tracks.filter((t) => !t.title.trim()).length;
+  const canPublish = !!draft.title.trim() && !!draft.artist.trim() && draft.tracks.length > 0 && !untitled && !draft.publishing;
   const resumable = !draft.publishing && (!!draft.albumUuid || draft.tracks.some((t) => t.trackUuid));
 
   const addAll = () => {
@@ -336,13 +337,20 @@ export function Releases() {
                       }}
                     >
                       <span className="d-num">{pad2((existing?.basePosition ?? 0) + i + 1)}</span>
-                      <input
-                        className="input inline"
-                        value={t.title}
-                        disabled={created || draft.publishing}
-                        onChange={(e) => updateTrack(t.id, { title: e.target.value })}
-                        aria-label={`Название трека ${i + 1}`}
-                      />
+                      <div className="d-title">
+                        <input
+                          className="input track-title"
+                          value={t.title}
+                          placeholder="Название трека"
+                          disabled={created || draft.publishing}
+                          onChange={(e) => updateTrack(t.id, { title: e.target.value })}
+                          aria-label={`Название трека ${i + 1}`}
+                          aria-invalid={!t.title.trim()}
+                        />
+                        <span className="hint d-file" title={t.file.webkitRelativePath || t.file.name}>
+                          файл: {t.file.name}
+                        </span>
+                      </div>
                       <span style={{ font: '400 11px/1 var(--mono)', color: 'var(--text-5)', textAlign: 'right' }}>{fmtDuration(t.meta.durationMs)}</span>
                       <button
                         type="button"
@@ -384,6 +392,9 @@ export function Releases() {
             </div>
 
             <ErrorLine error={draft.error} />
+            {untitled > 0 && !draft.publishing && (
+              <div className="hint c-warn">Введи название для всех треков — без названия: {untitled}</div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <span style={{ font: '400 11px/1 var(--mono)', color: 'var(--text-5)' }}>

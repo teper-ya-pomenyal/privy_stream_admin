@@ -928,6 +928,29 @@ button:disabled {
   padding: 6px 0;
   border-bottom: 1px solid #1b1b1f;
 }
+.d-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+/* Название трека — то, что увидят слушатели; поле видно сразу, а не только при наведении */
+.input.track-title {
+  padding: 8px 10px;
+}
+.input.track-title[aria-invalid='true']:not(:focus) {
+  border-color: var(--warn);
+}
+.input.track-title:disabled {
+  color: var(--text);
+  border-color: transparent;
+  background: transparent;
+}
+.d-file {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .d-row[draggable='true'] {
   cursor: grab;
 }
