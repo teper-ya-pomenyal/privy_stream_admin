@@ -1,0 +1,417 @@
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { releaseType } from '../api/catalogIndex';
+import { errorLabel } from '../api/http';
+import { Chip, ErrorLine, ScreenHeader, useConfirm } from '../components/ui';
+import { fmtBytes, fmtDuration, pad2, shortId } from '../lib/format';
+import { audioQuality, extOf, filesFromDataTransfer } from '../lib/metadata';
+import { CATALOG_KEY, useCatalogIndex } from '../state/queries';
+import {
+  addFiles,
+  addToDraft,
+  isDraftLocked,
+  moveTrack,
+  publishDraft,
+  removeFromQueue,
+  resetDraft,
+  retryProbe,
+  returnToQueue,
+  setDraftTarget,
+  updateDraft,
+  updateTrack,
+  useReleases,
+  type DraftTrack,
+  type QueueItem,
+} from '../state/releases';
+import { useToast } from '../state/toast';
+
+function QueueRow({ q, canAdd }: { q: QueueItem; canAdd: boolean }) {
+  const m = q.meta;
+  const meta = m
+    ? [fmtBytes(q.file.size), fmtDuration(m.durationMs), audioQuality(m) || m.codec, m.explicit ? '18+ из тегов' : ''].filter(Boolean).join(' · ')
+    : `${fmtBytes(q.file.size)} · ${extOf(q.file.name).toUpperCase()}`;
+  const width = q.stage === 'READY' || q.stage === 'ERROR' ? 100 : 50;
+  const color = q.stage === 'PROBE' ? 'var(--accent)' : q.stage === 'ERROR' ? 'var(--err)' : '#3A3A40';
+  return (
+    <div className="q-row">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
+          <span className="q-name" title={q.file.webkitRelativePath || q.file.name}>
+            {q.file.name}
+          </span>
+          <span style={{ font: '400 10px/1.2 var(--mono)', color: 'var(--text-5)' }}>{meta}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
+          {q.stage === 'PROBE' && <span className="stage">PROBE · TAGS</span>}
+          {q.stage === 'READY' && <span className="stage c-ok">ГОТОВ</span>}
+          {q.stage === 'ERROR' && (
+            <>
+              <span className="stage c-err">ОШИБКА</span>
+              <button type="button" className="btn xs" onClick={() => retryProbe(q.id)}>
+                ↻
+              </button>
+            </>
+          )}
+          {q.stage === 'READY' && canAdd && (
+            <button type="button" className="btn xs" title="Добавить в черновик" onClick={() => addToDraft([q.id])}>
+              +
+            </button>
+          )}
+          <button type="button" className="icon-btn" title="Убрать из очереди" onClick={() => removeFromQueue(q.id)}>
+            ×
+          </button>
+        </div>
+      </div>
+      <div className="bar">
+        <div style={{ width: `${width}%`, background: color }} />
+      </div>
+      {q.error && <span style={{ font: '400 10px/1.3 var(--mono)', color: 'var(--accent-text)' }}>{q.error}</span>}
+    </div>
+  );
+}
+
+function phaseLabel(t: DraftTrack) {
+  switch (t.phase) {
+    case 'index':
+      return 'INDEX';
+    case 'upload':
+      return `UPLOAD ${Math.round(t.progress * 100)}%`;
+    case 'uploaded':
+      return 'ФАЙЛ ЗАЛИТ';
+    case 'done':
+      return 'ГОТОВ';
+    case 'error':
+      return 'ОШИБКА';
+    default:
+      return t.trackUuid ? 'СОЗДАН' : '';
+  }
+}
+
+export function Releases() {
+  const state = useReleases();
+  const { queue, draft } = state;
+  const toast = useToast();
+  const qc = useQueryClient();
+  const catalog = useCatalogIndex();
+  const [params, setParams] = useSearchParams();
+  const { confirm, node: confirmNode } = useConfirm();
+  const filesInput = useRef<HTMLInputElement>(null);
+  const dirInput = useRef<HTMLInputElement>(null);
+  const [over, setOver] = useState(false);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dropIdx, setDropIdx] = useState<number | null>(null);
+
+  const locked = isDraftLocked(draft);
+  const existing = draft.target.kind === 'existing' ? draft.target : null;
+
+  // /releases?album={uuid} — дозалить треки в существующий релиз (пришли из каталога).
+  const albumParam = params.get('album');
+  useEffect(() => {
+    if (!albumParam || !catalog.data) return;
+    const a = catalog.data.albums.find((x) => x.album_uuid === albumParam);
+    if (a && (draft.target.kind !== 'existing' || draft.target.albumUuid !== a.album_uuid)) {
+      const ok = setDraftTarget({
+        kind: 'existing',
+        albumUuid: a.album_uuid,
+        albumName: a.album_name,
+        artistUuid: a.artist_uuid,
+        artistName: a.artist_name,
+        basePosition: a.tracks.length,
+      });
+      if (!ok) toast('Черновик занят публикацией — сначала заверши её');
+    }
+    setParams({}, { replace: true });
+  }, [albumParam, catalog.data]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const ingest = (files: File[]) => {
+    if (!files.length) return;
+    const r = addFiles(files);
+    const parts = [`В очередь: ${r.added}`];
+    if (r.duplicates) parts.push(`повторов ${r.duplicates}`);
+    if (r.images) parts.push(`обложек пропущено ${r.images} — нет в API`);
+    if (r.other) parts.push(`не аудио ${r.other}`);
+    toast(parts.join(' · '));
+  };
+
+  const onDrop = async (e: DragEvent) => {
+    e.preventDefault();
+    setOver(false);
+    ingest(await filesFromDataTransfer(e.dataTransfer));
+  };
+
+  const ready = queue.filter((q) => q.stage === 'READY').length;
+  const probing = queue.filter((q) => q.stage === 'PROBE').length;
+  const totalMs = draft.tracks.reduce((s, t) => s + (t.meta.durationMs ?? 0), 0);
+  const type = releaseType((existing?.basePosition ?? 0) + draft.tracks.length);
+  const canPublish = !!draft.title.trim() && !!draft.artist.trim() && draft.tracks.length > 0 && !draft.publishing;
+  const resumable = !draft.publishing && (!!draft.albumUuid || draft.tracks.some((t) => t.trackUuid));
+
+  const addAll = () => {
+    const n = addToDraft();
+    if (n) toast(`В релиз добавлено: ${n} тр.`);
+  };
+
+  const publish = async () => {
+    try {
+      const r = await publishDraft();
+      toast(`«${r.title}» опубликован · ${shortId(r.albumUuid)}`);
+      qc.invalidateQueries({ queryKey: CATALOG_KEY });
+    } catch (e) {
+      toast(`Публикация остановлена · ${errorLabel(e)}`);
+    }
+  };
+
+  const reset = async () => {
+    if (resumable) {
+      const ok = await confirm(
+        'Бросить незавершённую публикацию?',
+        'Альбом и часть треков уже созданы в каталоге — API v1 не умеет их удалять. Несозданные треки вернутся в очередь.',
+        'СБРОСИТЬ',
+      );
+      if (!ok) return;
+    }
+    resetDraft();
+  };
+
+  const typeNote = existing
+    ? `Треки добавятся в конец «${existing.albumName}» — с позиции ${existing.basePosition + 1}.`
+    : draft.tracks.length === 1
+      ? 'Сингл — тот же альбом, просто с одним треком. Тип в API не хранится: подпись выводится из числа треков.'
+      : 'Все разобранные файлы из очереди можно добавить в релиз одним действием. Порядок — по номеру трека из тегов, дальше перетаскиванием.';
+
+  const addAllLabel = ready
+    ? `+ ДОБАВИТЬ ВСЕ ГОТОВЫЕ В РЕЛИЗ · ${ready}`
+    : probing
+      ? `ЖДЁМ РАЗБОР ТЕГОВ · ${probing}`
+      : 'НЕТ ГОТОВЫХ ФАЙЛОВ';
+
+  const onRowDrop = (to: number) => {
+    if (dragIdx !== null) moveTrack(dragIdx, to);
+    setDragIdx(null);
+    setDropIdx(null);
+  };
+
+  return (
+    <>
+      <ScreenHeader
+        code="02 · ЗАГРУЗКА"
+        title="Релизы"
+        sub="Файлы разбираются в браузере, затем собираются в релиз и заливаются на узел. Сингл — это альбом с одним треком."
+      />
+      <div className="two-col">
+        <div className="stack gap-16" style={{ minWidth: 0 }}>
+          <div
+            className={`dropzone${over ? ' over' : ''}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => filesInput.current?.click()}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && filesInput.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setOver(true);
+            }}
+            onDragLeave={() => setOver(false)}
+            onDrop={onDrop}
+          >
+            <div className="dropzone-title">Перетащи файлы или папку релиза</div>
+            <div className="note">FLAC · ALAC · WAV · MP3 · обложки API v1 не принимает</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <span className="btn">ВЫБРАТЬ ФАЙЛЫ</span>
+              <button
+                type="button"
+                className="btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dirInput.current?.click();
+                }}
+              >
+                ПАПКУ
+              </button>
+            </div>
+            <input
+              ref={filesInput}
+              type="file"
+              multiple
+              accept="audio/*,.flac,.m4a,.alac,.wav,.mp3,.aiff,.ogg,.opus"
+              hidden
+              onChange={(e) => {
+                ingest(Array.from(e.target.files ?? []));
+                e.target.value = '';
+              }}
+            />
+            <input
+              ref={dirInput}
+              type="file"
+              hidden
+              // @ts-expect-error нестандартный атрибут выбора папки
+              webkitdirectory=""
+              onChange={(e) => {
+                ingest(Array.from(e.target.files ?? []));
+                e.target.value = '';
+              }}
+            />
+          </div>
+
+          <div className="section-head" style={{ alignItems: 'center' }}>
+            <div className="label">ОЧЕРЕДЬ · {queue.length}</div>
+            <div className="hint" style={{ letterSpacing: '.06em' }}>
+              PROBE → TAGS → INDEX → UPLOAD
+            </div>
+          </div>
+          <div className="list">
+            {queue.map((q) => (
+              <QueueRow key={q.id} q={q} canAdd={!locked} />
+            ))}
+            {!queue.length && <div className="empty">Очередь пуста — все файлы разобраны по релизам.</div>}
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head">
+            <span className="label">{existing ? 'ДОБАВЛЕНИЕ В РЕЛИЗ' : 'ЧЕРНОВИК РЕЛИЗА'}</span>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              {existing && !locked && (
+                <Chip onClick={() => setDraftTarget({ kind: 'new' })}>НОВЫЙ РЕЛИЗ ×</Chip>
+              )}
+              <span className="tag muted" title="Тип выводится из числа треков">
+                {type}
+              </span>
+            </div>
+          </div>
+          <div className="card-body">
+            <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+              <div className="draft-cover">
+                НЕТ
+                <br />
+                ОБЛОЖКИ
+              </div>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <input
+                  className="input title"
+                  placeholder="Название релиза"
+                  value={draft.title}
+                  disabled={!!existing || locked}
+                  onChange={(e) => updateDraft({ title: e.target.value })}
+                  aria-label="Название релиза"
+                />
+                <input
+                  className="input"
+                  placeholder="Исполнитель"
+                  value={draft.artist}
+                  disabled={!!existing || locked}
+                  onChange={(e) => updateDraft({ artist: e.target.value })}
+                  aria-label="Исполнитель"
+                />
+              </div>
+            </div>
+            <div className="note">{typeNote}</div>
+
+            <button type="button" className="btn-wide" disabled={!ready || locked} onClick={addAll}>
+              {addAllLabel}
+            </button>
+
+            <div className="stack" style={{ borderTop: '1px solid var(--card-line)' }}>
+              {draft.tracks.map((t, i) => {
+                const label = phaseLabel(t);
+                const created = !!t.trackUuid;
+                return (
+                  <div key={t.id}>
+                    <div
+                      className={`d-row${dropIdx === i && dragIdx !== i ? ' drop-target' : ''}`}
+                      draggable={!locked}
+                      onDragStart={() => setDragIdx(i)}
+                      onDragOver={(e) => {
+                        if (dragIdx === null) return;
+                        e.preventDefault();
+                        setDropIdx(i);
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        onRowDrop(i);
+                      }}
+                      onDragEnd={() => {
+                        setDragIdx(null);
+                        setDropIdx(null);
+                      }}
+                    >
+                      <span className="d-num">{pad2((existing?.basePosition ?? 0) + i + 1)}</span>
+                      <input
+                        className="input inline"
+                        value={t.title}
+                        disabled={created || draft.publishing}
+                        onChange={(e) => updateTrack(t.id, { title: e.target.value })}
+                        aria-label={`Название трека ${i + 1}`}
+                      />
+                      <span style={{ font: '400 11px/1 var(--mono)', color: 'var(--text-5)', textAlign: 'right' }}>{fmtDuration(t.meta.durationMs)}</span>
+                      <button
+                        type="button"
+                        className={`flag${t.explicit ? ' on' : ''}`}
+                        disabled={created || draft.publishing}
+                        title={t.meta.explicitSource ? `из тегов: ${t.meta.explicitSource}` : 'Метка 18+'}
+                        onClick={() => updateTrack(t.id, { explicit: !t.explicit })}
+                      >
+                        {t.explicit ? '18+' : '—'}
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        title="Вернуть в очередь"
+                        disabled={created || draft.publishing}
+                        onClick={() => returnToQueue(t.id)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    {label && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '4px 0 8px 38px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                          <span className={`stage${t.phase === 'error' ? ' c-err' : t.phase === 'uploaded' || t.phase === 'done' ? ' c-ok' : ''}`}>{label}</span>
+                          {t.trackUuid && <span className="hint">{shortId(t.trackUuid)}</span>}
+                        </div>
+                        {(t.phase === 'upload' || t.phase === 'index') && (
+                          <div className="bar">
+                            <div style={{ width: `${t.phase === 'index' ? 4 : Math.max(4, t.progress * 100)}%`, background: 'var(--accent)' }} />
+                          </div>
+                        )}
+                        {t.error && <span style={{ font: '400 10px/1.3 var(--mono)', color: 'var(--accent-text)' }}>{t.error}</span>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {!draft.tracks.length && <div className="empty" style={{ padding: '18px 0' }}>Треков нет. Дождись разбора тегов и добавь их одной кнопкой.</div>}
+            </div>
+
+            <ErrorLine error={draft.error} />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <span style={{ font: '400 11px/1 var(--mono)', color: 'var(--text-5)' }}>
+                {draft.tracks.length} тр · {fmtDuration(totalMs)}
+                {draft.albumUuid && ` · альбом ${shortId(draft.albumUuid)}`}
+              </span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {(draft.tracks.length > 0 || draft.title || existing) && (
+                  <button type="button" className="btn" disabled={draft.publishing} onClick={reset}>
+                    СБРОСИТЬ
+                  </button>
+                )}
+                <button type="button" className="btn-accent lg" disabled={!canPublish} onClick={publish}>
+                  {draft.publishing ? 'ПУБЛИКАЦИЯ…' : resumable ? 'ПРОДОЛЖИТЬ' : existing ? 'ДОБАВИТЬ' : 'ОПУБЛИКОВАТЬ'}
+                </button>
+              </div>
+            </div>
+            {draft.tracks.length > 0 && !draft.publishing && (
+              <div className="hint">
+                Треки создаются через POST /catalog/tracks, файлы — POST /catalog/tracks/{'{id}'}/file. После
+                создания трека название и метку 18+ уже не изменить: в API v1 нет обновления.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      {confirmNode}
+    </>
+  );
+}
+

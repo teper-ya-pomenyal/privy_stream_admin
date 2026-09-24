@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&family=IBM+Plex+Mono:wght@400;500;600&subset=cyrillic,cyrillic-ext,latin&display=swap" rel="stylesheet"><style>
+html,body{margin:0;padding:0;background:#0B0B0C;color:#E8E6E1;font-family:Manrope,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#D8452B;text-decoration:none}a:hover{color:#F26A4F}
+input{font-family:inherit}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#2A2A2E}::-webkit-scrollbar-track{background:#101012}
+@keyframes pv-blink{0%,45%{opacity:1}50%,100%{opacity:.15}}
+</style></helmet>
+<div style="height:100vh;display:flex;flex-direction:column;background:#0B0B0C;overflow:hidden">
+
+<div style="height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 16px 0 18px;border-bottom:1px solid #1E1E22;background:#0E0E10">
+<div style="display:flex;align-items:center;gap:16px;min-width:0">
+<div style="display:flex;align-items:center;gap:9px"><div style="width:9px;height:9px;background:#D8452B"></div><div style="font:700 11px/1 Manrope;letter-spacing:.2em;white-space:nowrap">PRIVY<span style="color:#6E6C67">/</span>STREAM</div></div>
+<div style="padding:4px 7px;border:1px solid #D8452B;font:600 9px/1 'IBM Plex Mono';letter-spacing:.18em;color:#F0765C">ADMIN</div>
+<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid #2E2E33;min-width:0">
+<div style="width:6px;height:6px;background:#8DB36B;animation:pv-blink 1.8s infinite;flex:none"></div>
+<span style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.1em;color:#C8C6C0;white-space:nowrap">home.privy.lan</span>
+<span style="font:400 10px/1 'IBM Plex Mono';color:#4E4C48;white-space:nowrap">· OWNER</span>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:10px">
+<span style="font:600 9px/1 'IBM Plex Mono';letter-spacing:.16em;color:#4E4C48">LAYOUT</span>
+<div style="display:flex;border:1px solid #26262A">
+<sc-for list="{{ layoutTabs }}" as="l" hint-placeholder-count="3">
+<div onClick="{{ l.pick }}" style="{{ l.style }}">{{ l.label }}</div>
+</sc-for>
+</div>
+<div style="display:flex;border:1px solid #26262A">
+<div onClick="{{ setDesktop }}" style="{{ tabDesktop }}">DESKTOP</div>
+<div onClick="{{ setMobile }}" style="{{ tabMobile }}">MOBILE</div>
+</div>
+</div>
+</div>
+
+<div style="{{ stageStyle }}">
+
+<sc-if value="{{ showSidebar }}" hint-placeholder-val="{{ true }}">
+<div style="width:216px;flex:none;border-right:1px solid #1E1E22;background:#0E0E10;display:flex;flex-direction:column;justify-content:space-between;padding:18px 0 16px">
+<div style="display:flex;flex-direction:column;gap:2px">
+<div style="padding:0 18px 10px;font:600 10px/1 'IBM Plex Mono';letter-spacing:.18em;color:#4E4C48">УПРАВЛЕНИЕ</div>
+<sc-for list="{{ nav }}" as="n" hint-placeholder-count="7">
+<div onClick="{{ n.go }}" style="{{ n.sideStyle }}" style-hover="{{ hoverNav }}">
+<span style="font:600 12px/1 'IBM Plex Mono';letter-spacing:.1em">{{ n.label }}</span>
+<span style="{{ n.countStyle }}">{{ n.count }}</span>
+</div>
+</sc-for>
+</div>
+<div style="padding:0 18px;display:flex;flex-direction:column;gap:9px">
+<div style="height:1px;background:#1E1E22;margin-bottom:4px"></div>
+<div style="display:flex;justify-content:space-between;font:400 10px/1 'IBM Plex Mono';color:#6E6C67"><span>СЕРВИСЫ</span><span style="color:#C8C6C0">{{ svcUpLabel }}</span></div>
+<div style="display:flex;justify-content:space-between;font:400 10px/1 'IBM Plex Mono';color:#6E6C67"><span>ДИСК</span><span style="color:#C8C6C0">612 / 2000 GB</span></div>
+<div style="display:flex;justify-content:space-between;font:400 10px/1 'IBM Plex Mono';color:#6E6C67"><span>BUILD</span><span style="color:#C8C6C0">0.4.1</span></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showRail }}" hint-placeholder-val="{{ false }}">
+<div style="width:68px;flex:none;border-right:1px solid #1E1E22;background:#0E0E10;display:flex;flex-direction:column;padding:8px 0">
+<sc-for list="{{ nav }}" as="n" hint-placeholder-count="7">
+<div onClick="{{ n.go }}" style="{{ n.railStyle }}" style-hover="{{ hoverNav }}">
+<span style="font:700 13px/1 'IBM Plex Mono'">{{ n.short }}</span>
+<span style="font:500 8px/1 'IBM Plex Mono';letter-spacing:.08em;color:#6E6C67">{{ n.count }}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<div style="{{ frameStyle }}">
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #1E1E22;background:#0E0E10">
+<div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;background:#D8452B"></div><span style="font:700 10px/1 Manrope;letter-spacing:.2em">ADMIN</span></div>
+<div style="display:flex;align-items:center;gap:7px"><div style="width:6px;height:6px;background:#8DB36B;animation:pv-blink 1.8s infinite"></div><span style="font:500 10px/1 'IBM Plex Mono';color:#8E8C86">home.privy.lan</span></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showTabs }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;display:flex;gap:4px;padding:0 24px;border-bottom:1px solid #1E1E22;background:#0E0E10;overflow-x:auto">
+<sc-for list="{{ nav }}" as="n" hint-placeholder-count="7">
+<div onClick="{{ n.go }}" style="{{ n.tabStyle }}" style-hover="{{ hoverText }}">
+<span>{{ n.label }}</span><span style="{{ n.countStyle }}">{{ n.count }}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<div style="flex:1;min-height:0;overflow-y:auto">
+<div style="{{ padStyle }}">
+
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 24px;padding-bottom:22px;margin-bottom:24px;border-bottom:1px solid #1E1E22">
+<div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+<div style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.2em;color:#D8452B">{{ page.code }}</div>
+<h1 style="{{ h1Style }}">{{ page.title }}</h1>
+<div style="font:400 13px/1.5 Manrope;color:#8E8C86;max-width:560px;text-wrap:pretty">{{ page.sub }}</div>
+</div>
+</div>
+
+<sc-if value="{{ onOverview }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:30px">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border-top:1px solid #1E1E22;border-left:1px solid #1E1E22">
+<sc-for list="{{ counters }}" as="c" hint-placeholder-count="4">
+<div onClick="{{ c.go }}" style="padding:18px 18px 16px;border-right:1px solid #1E1E22;border-bottom:1px solid #1E1E22;display:flex;flex-direction:column;gap:12px;cursor:pointer" style-hover="{{ hoverRow }}">
+<div style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.16em;color:#6E6C67">{{ c.label }}</div>
+<div style="font:700 30px/1 Manrope;letter-spacing:-.02em">{{ c.value }}</div>
+<div style="font:400 10px/1.3 'IBM Plex Mono';color:#4E4C48">{{ c.sub }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><div style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.18em;color:#6E6C67">СЕРВИСЫ · DOCKER-COMPOSE</div><div style="font:400 10px/1 'IBM Plex Mono';color:#4E4C48">клик → логи сервиса</div></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px">
+<sc-for list="{{ services }}" as="s" hint-placeholder-count="8">
+<div onClick="{{ s.go }}" style="padding:14px 14px 13px;background:#111113;border:1px solid #222226;display:flex;flex-direction:column;gap:11px;cursor:pointer" style-hover="{{ hoverCard }}">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+<span style="font:600 12px/1 'IBM Plex Mono';color:#E8E6E1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.name }}</span>
+<span style="{{ s.badgeStyle }}">{{ s.status }}</span>
+</div>
+<div style="display:flex;justify-content:space-between;gap:10px;font:400 10px/1 'IBM Plex Mono';color:#6E6C67"><span>{{ s.proto }}</span><span style="color:#A8A6A0">{{ s.lat }}</span></div>
+<div style="height:2px;background:#1E1E22"><div style="{{ s.barStyle }}"></div></div>
+<div style="font:400 10px/1 'IBM Plex Mono';color:#4E4C48">{{ s.note }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.18em;color:#6E6C67">ХРАНИЛИЩЕ</div>
+<div style="display:flex;align-items:baseline;gap:10px"><span style="font:700 26px/1 Manrope">612 GB</span><span style="font:400 12px/1 'IBM Plex Mono';color:#6E6C67">из 2 TB · /srv/privy/media</span></div>
+<div style="height:6px;background:#1E1E22;display:flex"><div style="width:30.6%;background:#E8E6E1"></div></div>
+<div onClick="{{ goReleases }}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid #1E1E22;border-bottom:1px solid #1E1E22;cursor:pointer" style-hover="{{ hoverText }}">
+<span style="font:500 12px/1 'IBM Plex Mono';color:#C8C6C0">{{ indexingLabel }}</span><span style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.14em;color:#D8452B">ОТКРЫТЬ →</span>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.18em;color:#6E6C67">ПРЕДУПРЕЖДЕНИЯ</div><div onClick="{{ goLogsAll }}" style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.14em;color:#D8452B;cursor:pointer">ВСЕ ЛОГИ →</div></div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ alerts }}" as="a" hint-placeholder-count="4">
+<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #17171B;font:400 11px/1.4 'IBM Plex Mono'">
+<span style="color:#4E4C48;flex:none">{{ a.t }}</span><span style="{{ a.lvlStyle }}">{{ a.lvl }}</span><span style="color:#A8A6A0;min-width:0;overflow-wrap:anywhere">{{ a.svc }} · {{ a.msg }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ onReleases }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:28px;align-items:start">
+
+<div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+<div onClick="{{ addFiles }}" style="padding:30px 20px;border:1px dashed #3A3A40;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;cursor:pointer;background:#0E0E10" style-hover="{{ hoverDrop }}">
+<div style="font:700 17px/1.2 Manrope">Перетащи файлы или папку релиза</div>
+<div style="font:400 11px/1.5 'IBM Plex Mono';color:#6E6C67">FLAC · ALAC · WAV · MP3 · обложка JPG/PNG</div>
+<div style="padding:11px 16px;border:1px solid #2E2E33;font:600 10px/1 'IBM Plex Mono';letter-spacing:.14em;color:#C8C6C0">ВЫБРАТЬ ФАЙЛЫ</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+<div style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.18em;color:#6E6C67">ОЧЕРЕДЬ · {{ queueCount }}</div>
+<div style="font:400 10px/1 'IBM Plex Mono';color:#4E4C48;letter-spacing:.06em">UPLOAD → PROBE → TAGS → INDEX</div>
+</div>
+<div style="display:flex;flex-direction:column;border-top:1px solid #1E1E22">
+<sc-for list="{{ queue }}" as="f" hint-placeholder-count="5">
+<div style="display:flex;flex-direction:column;gap:9px;padding:12px 0;border-bottom:1px solid #17171B">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+<div style="display:flex;flex-direction:column;gap:5px;min-width:0">
+<span style="font:500 12px/1.2 'IBM Plex Mono';color:#E8E6E1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ f.name }}</span>
+<span style="font:400 10px/1 'IBM Plex Mono';color:#6E6C67">{{ f.meta }}</span>
+</div>
+<div style="display:flex;align-items:center;gap:10px;flex:none">
+<span style="{{ f.stageStyle }}">{{ f.stageLabel }}</span>
+<sc-if value="{{ f.ready }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ f.add }}" style="padding:7px 9px;border:1px solid #2E2E33;font:600 10px/1 'IBM Plex Mono';color:#C8C6C0;cursor:pointer" style-hover="{{ hoverTab }}">+</div>
+</sc-if>
+</div>
+</div>
+<div style="height:2px;background:#1E1E22"><div style="{{ f.barStyle }}"></div></div>
+</div>
+</sc-for>
+<sc-if value="{{ queueEmpty }}" hint-placeholder-val="{{ false }}">
+<div style="padding:22px 0;font:400 12px/1.5 'IBM Plex Mono';color:#4E4C48">Очередь пуста — все файлы разобраны по релизам.</div>
+</sc-if>
+</div>
+</div>
+
+<div style="background:#111113;border:1px solid #222226;display:flex;flex-direction:column;min-width:0">
+<div style="padding:16px 18px;border-bottom:1px solid #222226;display:flex;justify-content:space-between;align-items:center;gap:10px">
+<span style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.18em;color:#6E6C67">ЧЕРНОВИК РЕЛИЗА</span>
+<div style="display:flex;border:1px solid #2E2E33">
+<sc-for list="{{ draftTypes }}" as="t" hint-placeholder-count="3">
+<div onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</div>
+</sc-for>
+</div>
+</div>
+<div style="padding:18px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:16px;align-items:flex-start">
+<div style="{{ coverStyle }}">{{ coverLabel }}</div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px">
+<input value="{{ draft.title }}" onChange="{{ onDraftTitle }}" placeholder="Название релиза" style="width:100%;padding:10px 12px;background:#0C0C0E;border:1px solid #2E2E33;color:#E8E6E1;font:600 15px/1 Manrope;outline:none" style-focus="{{ focusRing }}">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:8px">
+<input value="{{ draft.artist }}" onChange="{{ onDraftArtist }}" placeholder="Исполнитель" style="width:100%;padding:10px 12px;background:#0C0C0E;border:1px solid #2E2E33;color:#E8E6E1;font:500 13px/1 Manrope;outline:none" style-focus="{{ focusRing }}">
+<input value="{{ draft.year }}" onChange="{{ onDraftYear }}" placeholder="Год" style="width:100%;padding:10px 12px;background:#0C0C0E;border:1px solid #2E2E33;color:#E8E6E1;font:500 13px/1 'IBM Plex Mono';outline:none" style-focus="{{ focusRing }}">
+</div>
+</div>
+</div>
+<div style="font:400 11px/1.5 'IBM Plex Mono';color:#6E6C67">{{ typeNote }}</div>
+<div onClick="{{ addAll }}" style="{{ addAllStyle }}" style-hover="{{ addAllHover }}">{{ addAllLabel }}</div>
+<div style="display:flex;flex-direction:column;border-top:1px solid #222226">
+<sc-for list="{{ draftTracks }}" as="tr" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:28px minmax(0,1fr) auto 28px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #1B1B1F">
+<span style="font:500 11px/1 'IBM Plex Mono';color:#4E4C48">{{ tr.n }}</span>
+<span style="font:500 13px/1.3 Manrope;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ tr.title }}</span>
+<span style="font:400 11px/1 'IBM Plex Mono';color:#6E6C67">{{ tr.dur }}</span>
+<div onClick="{{ tr.remove }}" style="font:500 12px/1 'IBM Plex Mono';color:#6E6C67;cursor:pointer;text-align:center;padding:4px 0" style-hover="{{ hoverText }}">×</div>
+</div>
+</sc-for>
+<sc-if value="{{ draftEmpty }}" hint-placeholder-val="{{ true }}">
+<div style="padding:18px 0;font:400 12px/1.5 'IBM Plex Mono';color:#4E4C48">Треков нет. Дождись индексации и добавь их одной кнопкой.</div>
+</sc-if>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+<span style="font:400 11px/1 'IBM Plex Mono';color:#6E6C67">{{ draftSummary }}</span>
+<div onClick="{{ publish }}" style="{{ publishStyle }}" style-hover="{{ publishHover }}">ОПУБЛИКОВАТЬ</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ onCatalog }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+<input value="{{ catQuery }}" onChange="{{ onCatQuery }}" placeholder="поиск: название, исполнитель" style="flex:1;min-width:200px;max-width:340px;padding:10px 12px;background:#0C0C0E;border:1px solid #2E2E33;color:#E8E6E1;font:500 12px/1 'IBM Plex Mono';outline:none" style-focus="{{ focusRing }}">
+<sc-for list="{{ catFilters }}" as="c" hint-placeholder-count="4">
+<div onClick="{{ c.pick }}" style="{{ c.style }}" style-hover="{{ hoverTab }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;align-items:start">
+<div style="display:flex;flex-direction:column;border-top:1px solid #1E1E22">
+<sc-for list="{{ albums }}" as="a" hint-placeholder-count="6">
+<div onClick="{{ a.select }}" style="{{ a.rowStyle }}" style-hover="{{ hoverRow }}">
+<div style="{{ a.coverStyle }}">{{ a.initials }}</div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+<span style="font:600 14px/1.2 Manrope;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.title }}</span>
+<span style="font:400 10px/1 'IBM Plex Mono';color:#6E6C67;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.meta }}</span>
+</div>
+<sc-if value="{{ a.explicit }}" hint-placeholder-val="{{ false }}">
+<span style="padding:4px 6px;border:1px solid #D8452B;font:600 9px/1 'IBM Plex Mono';color:#F0765C;flex:none">18+</span>
+</sc-if>
+</div>
+</sc-for>
+</div>
+
+<sc-if value="{{ hasEdit }}" hint-placeholder-val="{{ false }}">
+<div style="background:#111113;border:1px solid #222226;display:flex;flex-direction:column;min-width:0">
+<div style="padding:16px 18px;border-bottom:1px solid #222226;display:flex;justify-content:space-between;align-items:center;gap:10px">
+<span style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.18em;color:#6E6C67">МЕТАДАННЫЕ · {{ edit.id }}</span>
+<div onClick="{{ closeEdit }}" style="font:500 13px/1 'IBM Plex Mono';color:#6E6C67;cursor:pointer" style-hover="{{ hoverText }}">×</div>
+</div>
+<div style="padding:18px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-direction:column;gap:7px"><label style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.16em;color:#6E6C67">НАЗВАНИЕ</label><input value="{{ edit.title }}" onChange="{{ onEditTitle }}" style="width:100%;padding:10px 12px;background:#0C0C0E;border:1px solid #2E2E33;color:#E8E6E1;font:600 15px/1 Manrope;outline:none" style-focus="{{ focusRing }}"></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
+<div style="display:flex;flex-direction:column;gap:7px"><label style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.16em;color:#6E6C67">ИСПОЛНИТЕЛЬ</label><input value="{{ edit.artist }}" onChange="{{ onEditArtist }}" style="width:100%;padding:10px 12px;background:#0C0C0E;border:1px solid #2E2E33;color:#E8E6E1;font:500 13px/1 Manrope;outline:none" style-focus="{{ focusRing }}"></div>
+<div style="display:flex;flex-direction:column;gap:7px"><label style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.16em;color:#6E6C67">ГОД</label><input value="{{ edit.year }}" onChange="{{ onEditYear }}" style="width:100%;padding:10px 12px;background:#0C0C0E;border:1px solid #2E2E33;color:#E8E6E1;font:500 13px/1 'IBM Plex Mono';outline:none" style-focus="{{ focusRing }}"></div>
+<div style="display:flex;flex-direction:column;gap:7px"><label style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.16em;color:#6E6C67">ЖАНР</label><input value="{{ edit.genre }}" onChange="{{ onEditGenre }}" style="width:100%;padding:10px 12px;background:#0C0C0E;border:1px solid #2E2E33;color:#E8E6E1;font:500 13px/1 Manrope;outline:none" style-focus="{{ focusRing }}"></div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+<label style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.16em;color:#6E6C67">ТИП</label>
+<div style="display:flex;border:1px solid #2E2E33">
+<sc-for list="{{ editTypes }}" as="t" hint-placeholder-count="3">
+<div onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</div>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;border-top:1px solid #222226">
+<div style="display:flex;justify-content:space-between;padding:12px 0 6px;font:600 10px/1 'IBM Plex Mono';letter-spacing:.16em;color:#6E6C67"><span>ТРЕКИ · {{ editTrackCount }}</span><span>18+</span></div>
+<sc-for list="{{ editTracks }}" as="tr" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:24px minmax(0,1fr) 44px 44px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #1B1B1F">
+<span style="font:500 11px/1 'IBM Plex Mono';color:#4E4C48">{{ tr.n }}</span>
+<input value="{{ tr.title }}" onChange="{{ tr.onTitle }}" style="width:100%;padding:8px 8px;background:transparent;border:1px solid transparent;color:#E8E6E1;font:500 13px/1 Manrope;outline:none" style-focus="{{ focusRing }}" style-hover="{{ hoverInput }}">
+<span style="font:400 11px/1 'IBM Plex Mono';color:#6E6C67;text-align:right">{{ tr.dur }}</span>
+<div onClick="{{ tr.toggle }}" style="{{ tr.flagStyle }}">{{ tr.flagLabel }}</div>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;justify-content:flex-end;gap:8px;padding-top:4px">
+<div onClick="{{ resetEdit }}" style="padding:12px 16px;border:1px solid #2E2E33;font:600 10px/1 'IBM Plex Mono';letter-spacing:.14em;color:#8E8C86;cursor:pointer" style-hover="{{ hoverTab }}">СБРОСИТЬ</div>
+<div onClick="{{ saveEdit }}" style="padding:12px 18px;background:#D8452B;color:#0B0B0C;font:700 10px/1 'IBM Plex Mono';letter-spacing:.16em;cursor:pointer" style-hover="{{ hoverAccent }}">СОХРАНИТЬ</div>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ noEdit }}" hint-placeholder-val="{{ true }}">
+<div style="padding:40px 24px;border:1px dashed #26262A;font:400 12px/1.6 'IBM Plex Mono';color:#4E4C48;text-align:center">Выбери релиз слева, чтобы править метаданные и треки.</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ onUsers }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+<input value="{{ userQuery }}" onChange="{{ onUserQuery }}" placeholder="поиск по логину" style="flex:1;min-width:200px;max-width:340px;padding:10px 12px;background:#0C0C0E;border:1px solid #2E2E33;color:#E8E6E1;font:500 12px/1 'IBM Plex Mono';outline:none" style-focus="{{ focusRing }}">
+<span style="font:400 10px/1 'IBM Plex Mono';color:#6E6C67;letter-spacing:.06em">{{ usersSummary }}</span>
+</div>
+<div style="display:flex;flex-direction:column;border-top:1px solid #1E1E22">
+<sc-for list="{{ users }}" as="u" hint-placeholder-count="6">
+<div style="{{ u.rowStyle }}">
+<div style="flex:1 1 200px;min-width:0;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:center;gap:8px"><span style="font:600 14px/1 'IBM Plex Mono'">{{ u.login }}</span><span style="{{ u.roleStyle }}">{{ u.role }}</span></div>
+<span style="font:400 10px/1 'IBM Plex Mono';color:#6E6C67">создан {{ u.created }} · {{ u.birth }}</span>
+</div>
+<div style="flex:0 0 150px;display:flex;flex-direction:column;gap:6px">
+<span style="font:500 12px/1 'IBM Plex Mono';color:#C8C6C0">{{ u.ageLabel }}</span>
+<span style="{{ u.accessStyle }}">{{ u.access }}</span>
+</div>
+<div onClick="{{ u.goSessions }}" style="flex:0 0 90px;font:500 11px/1 'IBM Plex Mono';color:#A8A6A0;cursor:pointer" style-hover="{{ hoverText }}">{{ u.sessLabel }} →</div>
+<div style="flex:0 0 auto;display:flex;gap:8px;align-items:center">
+<span style="{{ u.statusStyle }}">{{ u.status }}</span>
+<sc-if value="{{ u.canBlock }}" hint-placeholder-val="{{ true }}">
+<div onClick="{{ u.toggle }}" style="padding:8px 11px;border:1px solid #2E2E33;font:600 10px/1 'IBM Plex Mono';letter-spacing:.12em;color:#C8C6C0;cursor:pointer;white-space:nowrap" style-hover="{{ hoverTab }}">{{ u.action }}</div>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ onSessions }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<sc-for list="{{ sessFilters }}" as="c" hint-placeholder-count="3">
+<div onClick="{{ c.pick }}" style="{{ c.style }}" style-hover="{{ hoverTab }}">{{ c.label }}</div>
+</sc-for>
+<sc-if value="{{ sessUser }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ clearSessUser }}" style="padding:8px 11px;background:#E8E6E1;color:#0B0B0C;font:600 10px/1 'IBM Plex Mono';letter-spacing:.1em;cursor:pointer">{{ sessUser }} ×</div>
+</sc-if>
+</div>
+<div onClick="{{ revokeOthers }}" style="padding:10px 14px;border:1px solid #D8452B;font:600 10px/1 'IBM Plex Mono';letter-spacing:.14em;color:#F0765C;cursor:pointer;white-space:nowrap" style-hover="{{ hoverDanger }}">ОТОЗВАТЬ ВСЕ, КРОМЕ ТЕКУЩЕЙ</div>
+</div>
+<div style="display:flex;flex-direction:column;border-top:1px solid #1E1E22">
+<sc-for list="{{ sessions }}" as="s" hint-placeholder-count="6">
+<div style="{{ s.rowStyle }}">
+<div style="flex:1 1 210px;min-width:0;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font:600 13px/1 'IBM Plex Mono'">{{ s.user }}</span><sc-if value="{{ s.current }}" hint-placeholder-val="{{ false }}"><span style="font:600 9px/1 'IBM Plex Mono';letter-spacing:.12em;color:#8DB36B">ЭТА СЕССИЯ</span></sc-if></div>
+<span style="font:400 11px/1.3 Manrope;color:#A8A6A0">{{ s.device }} · {{ s.ip }}</span>
+</div>
+<div style="flex:1 1 170px;display:flex;flex-direction:column;gap:6px;font:400 10px/1.2 'IBM Plex Mono';color:#6E6C67">
+<span>семья <span style="color:#C8C6C0">{{ s.fam }}</span> · ротация #{{ s.rot }}</span>
+<span>активность {{ s.last }} · истекает {{ s.exp }}</span>
+</div>
+<div style="flex:0 0 auto;display:flex;gap:8px;align-items:center">
+<span style="{{ s.statusStyle }}">{{ s.statusLabel }}</span>
+<sc-if value="{{ s.canRevoke }}" hint-placeholder-val="{{ true }}">
+<div onClick="{{ s.revoke }}" style="padding:8px 11px;border:1px solid #2E2E33;font:600 10px/1 'IBM Plex Mono';letter-spacing:.12em;color:#C8C6C0;cursor:pointer" style-hover="{{ hoverTab }}">ОТОЗВАТЬ</div>
+</sc-if>
+</div>
+<sc-if value="{{ s.reuse }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1 1 100%;font:400 11px/1.5 'IBM Plex Mono';color:#F0765C">Повторное предъявление уже ротированного refresh-токена — вся семья отозвана автоматически.</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ onModeration }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{ modFilters }}" as="c" hint-placeholder-count="3">
+<div onClick="{{ c.pick }}" style="{{ c.style }}" style-hover="{{ hoverTab }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;border-top:1px solid #1E1E22">
+<sc-for list="{{ modItems }}" as="m" hint-placeholder-count="5">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding:15px 0;border-bottom:1px solid #17171B">
+<div style="flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:6px">
+<span style="font:600 14px/1.2 Manrope">{{ m.track }}</span>
+<span style="font:400 10px/1.2 'IBM Plex Mono';color:#6E6C67">{{ m.artist }} · {{ m.album }}</span>
+</div>
+<div style="flex:0 0 150px;display:flex;flex-direction:column;gap:6px">
+<span style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.1em;color:#A8A6A0">{{ m.source }}</span>
+<span style="font:400 10px/1.2 'IBM Plex Mono';color:#4E4C48">{{ m.detail }}</span>
+</div>
+<div style="flex:0 0 auto;display:flex;gap:8px;align-items:center">
+<sc-if value="{{ m.pending }}" hint-placeholder-val="{{ true }}">
+<div onClick="{{ m.mark }}" style="padding:9px 12px;background:#D8452B;color:#0B0B0C;font:700 10px/1 'IBM Plex Mono';letter-spacing:.12em;cursor:pointer" style-hover="{{ hoverAccent }}">ПОМЕТИТЬ 18+</div>
+<div onClick="{{ m.clear }}" style="padding:9px 12px;border:1px solid #2E2E33;font:600 10px/1 'IBM Plex Mono';letter-spacing:.12em;color:#C8C6C0;cursor:pointer" style-hover="{{ hoverTab }}">БЕЗ МЕТКИ</div>
+</sc-if>
+<sc-if value="{{ m.done }}" hint-placeholder-val="{{ false }}">
+<span style="{{ m.resultStyle }}">{{ m.result }}</span>
+<div onClick="{{ m.undo }}" style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.12em;color:#6E6C67;cursor:pointer" style-hover="{{ hoverText }}">ВЕРНУТЬ</div>
+</sc-if>
+</div>
+</div>
+</sc-for>
+<sc-if value="{{ modEmpty }}" hint-placeholder-val="{{ false }}">
+<div style="padding:24px 0;font:400 12px/1.5 'IBM Plex Mono';color:#4E4C48">Очередь пуста.</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ onLogs }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<sc-for list="{{ svcFilters }}" as="c" hint-placeholder-count="5">
+<div onClick="{{ c.pick }}" style="{{ c.style }}" style-hover="{{ hoverTab }}">{{ c.label }}</div>
+</sc-for>
+<div style="width:1px;height:22px;background:#26262A;margin:0 4px"></div>
+<sc-for list="{{ lvlFilters }}" as="c" hint-placeholder-count="3">
+<div onClick="{{ c.pick }}" style="{{ c.style }}" style-hover="{{ hoverTab }}">{{ c.label }}</div>
+</sc-for>
+<div onClick="{{ toggleLive }}" style="{{ liveStyle }}"><div style="{{ liveDot }}"></div>{{ liveLabel }}</div>
+</div>
+<div style="background:#0E0E10;border:1px solid #1E1E22;font:400 11px/1.45 'IBM Plex Mono'">
+<sc-for list="{{ logRows }}" as="l" hint-placeholder-count="12">
+<div style="display:flex;flex-wrap:wrap;gap:2px 14px;padding:7px 12px;border-bottom:1px solid #151518">
+<span style="color:#4E4C48;flex:none">{{ l.t }}</span>
+<span style="{{ l.lvlStyle }}">{{ l.lvl }}</span>
+<span style="color:#8E8C86;flex:0 0 118px">{{ l.svc }}</span>
+<span style="color:#C8C6C0;flex:1 1 260px;min-width:0;overflow-wrap:anywhere">{{ l.msg }}</span>
+<span style="{{ l.codeStyle }}">{{ l.code }}</span>
+<span style="color:#6E6C67;flex:0 0 50px;text-align:right">{{ l.ms }}</span>
+</div>
+</sc-for>
+<sc-if value="{{ logsEmpty }}" hint-placeholder-val="{{ false }}">
+<div style="padding:20px 12px;color:#4E4C48">Нет записей по фильтру.</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+</div>
+</div>
+
+<sc-if value="{{ showDock }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;height:176px;border-top:1px solid #1E1E22;background:#0E0E10;display:flex;flex-direction:column;min-height:0">
+<div style="flex:none;display:flex;justify-content:space-between;align-items:center;padding:9px 16px;border-bottom:1px solid #1E1E22">
+<div style="display:flex;align-items:center;gap:8px"><div style="{{ liveDot }}"></div><span style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.16em;color:#8E8C86">TAIL · ВСЕ СЕРВИСЫ</span></div>
+<div onClick="{{ goLogsAll }}" style="font:600 10px/1 'IBM Plex Mono';letter-spacing:.14em;color:#D8452B;cursor:pointer">РАЗВЕРНУТЬ →</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:4px 0;font:400 11px/1.5 'IBM Plex Mono'">
+<sc-for list="{{ dockRows }}" as="l" hint-placeholder-count="6">
+<div style="display:flex;gap:14px;padding:2px 16px;white-space:nowrap;overflow:hidden">
+<span style="color:#4E4C48">{{ l.t }}</span><span style="{{ l.lvlStyle }}">{{ l.lvl }}</span><span style="color:#8E8C86;width:118px;flex:none">{{ l.svc }}</span><span style="color:#C8C6C0;overflow:hidden;text-overflow:ellipsis">{{ l.msg }}</span><span style="{{ l.codeStyle }}">{{ l.code }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<sc-if value="{{ moreOpen }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ closeMore }}" style="position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;z-index:5">
+<div style="width:100%;background:#121214;border-top:1px solid #2E2E33;padding:10px 0 78px">
+<sc-for list="{{ moreNav }}" as="n" hint-placeholder-count="3">
+<div onClick="{{ n.go }}" style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid #1E1E22;cursor:pointer">
+<span style="font:600 13px/1 'IBM Plex Mono';letter-spacing:.1em">{{ n.label }}</span><span style="{{ n.countStyle }}">{{ n.count }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+<div style="flex:none;display:flex;border-top:1px solid #1E1E22;background:#0E0E10;position:relative;z-index:6">
+<sc-for list="{{ mobileNav }}" as="n" hint-placeholder-count="5">
+<div onClick="{{ n.go }}" style="{{ n.style }}">
+<span style="font:700 12px/1 'IBM Plex Mono'">{{ n.short }}</span>
+<span style="font:600 8px/1 'IBM Plex Mono';letter-spacing:.1em">{{ n.label }}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;right:16px;bottom:16px;z-index:10;padding:12px 16px;background:#E8E6E1;color:#0B0B0C;font:600 11px/1.3 'IBM Plex Mono';letter-spacing:.04em;max-width:320px">{{ toast }}</div>
+</sc-if>
+
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;layout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;A&quot;,&quot;B&quot;,&quot;C&quot;],&quot;default&quot;:&quot;B&quot;,&quot;tsType&quot;:&quot;'A'|'B'|'C'&quot;},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;mobile&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;'desktop'|'mobile'&quot;},&quot;liveLogs&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const M = "'IBM Plex Mono'";
+const OK = '#8DB36B', WARN = '#D9A441', ERR = '#D8452B';
+const TODAY = new Date('2026-09-23');
+
+const tk = (list, ex = []) => list.map((t, i) => ({ id: 't' + Math.random().toString(36).slice(2, 8), title: t[0], dur: t[1], explicit: ex.includes(i) }));
+const ALBUMS = [
+  { id: 'rel_0112', title: 'Северный ветер', artist: 'Полярный Круг', year: '2019', genre: 'Post-rock', type: 'АЛЬБОМ', hue: 220, tracks: tk([['Мурманск, 4 утра', '6:12'], ['Лёд на проводах', '4:48'], ['Северный ветер', '7:30'], ['Полярная ночь', '5:05'], ['Возвращение', '8:14']]) },
+  { id: 'rel_0108', title: 'Не для эфира', artist: 'Гражданский Шум', year: '2008', genre: 'Punk', type: 'АЛЬБОМ', hue: 20, tracks: tk([['Не для эфира', '2:41'], ['Список', '2:05'], ['Цензор', '3:12'], ['Подъезд', '2:37'], ['Всё можно', '3:40'], ['Финал', '4:02']], [0, 2]) },
+  { id: 'rel_0104', title: 'Бетон и мёд', artist: 'Кира Лёд', year: '2022', genre: 'Art-pop', type: 'EP', hue: 45, tracks: tk([['Бетон', '3:22'], ['Мёд', '3:58'], ['Окраина', '4:11'], ['Сквозняк', '3:05']]) },
+  { id: 'rel_0101', title: 'Ночной тираж', artist: 'Мотель Урал', year: '2024', genre: 'Synthwave', type: 'СИНГЛ', hue: 300, tracks: tk([['Ночной тираж', '4:26']]) },
+  { id: 'rel_0097', title: 'Low Orbit', artist: 'Sable Coast', year: '2021', genre: 'Ambient', type: 'АЛЬБОМ', hue: 190, tracks: tk([['Launch Window', '5:40'], ['Perigee', '6:02'], ['Dust Tail', '7:18'], ['Re-entry', '4:55']]) },
+  { id: 'rel_0093', title: 'Туман над Обью', artist: 'Вера Ставр', year: '2017', genre: 'Folk', type: 'АЛЬБОМ', hue: 140, tracks: tk([['Туман над Обью', '4:34'], ['Бакен', '3:49'], ['Сети', '5:10'], ['Колыбельная для Сибири', '3:58'], ['Паром', '4:20']], [3]) },
+];
+const USERS = [
+  { id: 'u1', login: 'root_owner', birth: '1990-03-14', role: 'OWNER', created: '2025-11-02', blocked: false },
+  { id: 'u2', login: 'marta_v', birth: '1996-07-01', role: 'USER', created: '2025-11-04', blocked: false },
+  { id: 'u3', login: 'lesha.k', birth: '2010-02-19', role: 'USER', created: '2026-01-12', blocked: false },
+  { id: 'u4', login: 'dmitry', birth: '1988-12-30', role: 'USER', created: '2025-12-20', blocked: false },
+  { id: 'u5', login: 'nika_b', birth: '2001-05-08', role: 'USER', created: '2026-03-03', blocked: false },
+  { id: 'u6', login: 'test_user', birth: '2000-01-01', role: 'USER', created: '2026-04-15', blocked: true },
+  { id: 'u7', login: 'sasha_p', birth: '2009-11-27', role: 'USER', created: '2026-08-30', blocked: false },
+];
+const SESSIONS = [
+  { id: 's1', user: 'root_owner', device: 'Firefox 131 · Linux', ip: '10.0.0.12', fam: 'f7a2…c91e', rot: 14, last: 'сейчас', exp: '29 д', status: 'ACTIVE', current: true },
+  { id: 's2', user: 'root_owner', device: 'Privy iOS 0.4 · iPhone', ip: '10.0.0.31', fam: '1be0…04aa', rot: 52, last: '2 ч назад', exp: '27 д', status: 'ACTIVE' },
+  { id: 's3', user: 'marta_v', device: 'Chrome 129 · macOS', ip: '85.140.12.7', fam: '9c11…e2f0', rot: 8, last: '14 мин назад', exp: '30 д', status: 'ACTIVE' },
+  { id: 's4', user: 'dmitry', device: 'Privy Android 0.4', ip: '176.59.3.201', fam: '44d9…7b13', rot: 31, last: '1 д назад', exp: '22 д', status: 'ACTIVE' },
+  { id: 's5', user: 'lesha.k', device: 'Safari 18 · iPad', ip: '85.140.12.9', fam: 'a0f3…19cd', rot: 3, last: '3 ч назад', exp: '28 д', status: 'ACTIVE' },
+  { id: 's6', user: 'nika_b', device: 'Chrome 129 · Windows', ip: '91.203.44.18', fam: '6e2b…a871', rot: 19, last: '40 мин назад', exp: '25 д', status: 'REUSE' },
+  { id: 's7', user: 'test_user', device: 'curl/8.4', ip: '10.0.0.99', fam: 'dd01…0003', rot: 1, last: '12 д назад', exp: '—', status: 'REVOKED' },
+];
+const MOD = [
+  { id: 'm1', track: 'Цензор', artist: 'Гражданский Шум', album: 'Не для эфира', source: 'ТЕГ EXPLICIT', detail: 'ID3 · ITUNESADVISORY=1', state: 'pending' },
+  { id: 'm2', track: 'Сквозняк', artist: 'Кира Лёд', album: 'Бетон и мёд', source: 'ЖАЛОБА', detail: 'от marta_v · 2 д назад', state: 'pending' },
+  { id: 'm3', track: 'Подъезд', artist: 'Гражданский Шум', album: 'Не для эфира', source: 'ТЕКСТ', detail: 'совпадение по словарю', state: 'pending' },
+  { id: 'm4', track: 'Dust Tail', artist: 'Sable Coast', album: 'Low Orbit', source: 'ЖАЛОБА', detail: 'от dmitry · 5 д назад', state: 'pending' },
+  { id: 'm5', track: 'Колыбельная для Сибири', artist: 'Вера Ставр', album: 'Туман над Обью', source: 'ТЕГ EXPLICIT', detail: 'Vorbis · EXPLICIT=1', state: 'marked' },
+  { id: 'm6', track: 'Мёд', artist: 'Кира Лёд', album: 'Бетон и мёд', source: 'ЖАЛОБА', detail: 'от lesha.k · 9 д назад', state: 'cleared' },
+];
+const LOGT = [
+  ['INFO', 'gateway', 'POST /v1/auth/login', '200', 38], ['INFO', 'user_service', '/user.v1.UserService/Login', 'OK', 21],
+  ['INFO', 'gateway', 'POST /v1/auth/refresh', '200', 12], ['INFO', 'user_service', '/user.v1.UserService/Refresh', 'OK', 6],
+  ['WARN', 'user_service', '/user.v1.UserService/Login', 'Unauthenticated', 18], ['WARN', 'gateway', 'POST /v1/auth/login', '401', 24],
+  ['INFO', 'catalog_service', '/catalog.v1.CatalogService/GetAlbum', 'OK', 4], ['INFO', 'gateway', 'GET /v1/albums/rel_0112', '200', 9],
+  ['INFO', 'streaming_service', '/stream.v1.StreamService/Open · FLAC 24/96', 'OK', 61], ['WARN', 'streaming_service', 'buffer underrun · client 176.59.3.201', 'OK', 412],
+  ['ERROR', 'user_service', 'refresh token reuse · family 6e2b…a871 revoked', 'Unauthenticated', 3], ['INFO', 'gateway', 'GET /v1/stream/t_91ab', '206', 55],
+  ['ERROR', 'gateway', 'POST /v1/auth/register · upstream', '503', 5001], ['INFO', 'catalog_service', 'index: 01 - Сырая нефть.flac', 'OK', 140],
+];
+const pad = n => String(n).padStart(2, '0');
+let clock = 14 * 3600 + 2 * 60;
+const mkLog = (tpl) => { clock += 1 + Math.floor(Math.random() * 6); const t = tpl || LOGT[Math.floor(Math.random() * LOGT.length)]; return { id: 'l' + clock + Math.random(), t: `${pad(Math.floor(clock / 3600) % 24)}:${pad(Math.floor(clock / 60) % 60)}:${pad(clock % 60)}`, lvl: t[0], svc: t[1], msg: t[2], code: t[3], ms: Math.max(1, Math.round(t[4] * (0.7 + Math.random() * 0.6))) }; };
+
+const FILES_A = [
+  { name: '01 - Сырая нефть.flac', size: '38.2 MB', title: 'Сырая нефть', dur: '3:41', p: 100 },
+  { name: '02 - Промзона.flac', size: '41.7 MB', title: 'Промзона', dur: '4:02', p: 100 },
+  { name: '03 - Факел.flac', size: '35.0 MB', title: 'Факел', dur: '3:24', p: 64 },
+  { name: '04 - Трубопровод.flac', size: '47.9 MB', title: 'Трубопровод', dur: '4:39', p: 22 },
+  { name: 'cover.jpg', size: '2.4 MB', cover: true, p: 100 },
+];
+const FILES_B = [
+  { name: '05 - Вышка.flac', size: '39.3 MB', title: 'Вышка', dur: '3:48', p: 0 },
+  { name: '06 - Мазут.flac', size: '44.1 MB', title: 'Мазут', dur: '4:17', p: 0 },
+  { name: '07 - Сырая нефть (reprise).flac', size: '18.6 MB', title: 'Сырая нефть (reprise)', dur: '1:49', p: 0 },
+];
+let fid = 0;
+const mkFiles = arr => arr.map(f => ({ ...f, id: 'f' + (++fid) }));
+const STAGES = ['UPLOAD', 'PROBE', 'TAGS', 'INDEX', 'ГОТОВ'];
+const stageOf = p => p >= 100 ? 4 : Math.min(3, Math.floor(p / 25));
+const ageOf = b => { const d = new Date(b); let a = TODAY.getFullYear() - d.getFullYear(); if (TODAY < new Date(TODAY.getFullYear(), d.getMonth(), d.getDate())) a--; return a; };
+const durSec = d => { const [m, s] = d.split(':').map(Number); return m * 60 + s; };
+const fmtDur = s => `${Math.floor(s / 60)}:${pad(s % 60)}`;
+
+class Component extends DCLogic {
+  state = {
+    screen: 'overview', layout: this.props.layout ?? 'B', device: this.props.device ?? 'desktop', moreOpen: false,
+    albums: ALBUMS, catQuery: '', catFilter: 'ВСЕ', edit: null,
+    queue: mkFiles(FILES_A), batchB: false,
+    draft: { title: 'Сырая нефть', artist: 'Кира Лёд', year: '2026', type: 'АЛЬБОМ', tracks: [], cover: false },
+    users: USERS, userQuery: '', sessions: SESSIONS, sessFilter: 'ВСЕ', sessUser: '',
+    mod: MOD, modFilter: 'ОЧЕРЕДЬ',
+    logs: Array.from({ length: 40 }, () => mkLog()).reverse(), live: this.props.liveLogs ?? true, svcFilter: 'ALL', lvlFilter: 'ALL',
+    toast: '',
+  };
+  componentDidMount() {
+    this.tick = setInterval(() => {
+      const q = this.state.queue;
+      if (q.some(f => f.p < 100)) this.setState({ queue: q.map(f => f.p >= 100 ? f : { ...f, p: Math.min(100, f.p + 4 + Math.random() * 9) }) });
+    }, 500);
+    this.logTick = setInterval(() => { if (this.state.live) this.setState(s => ({ logs: [mkLog(), ...s.logs].slice(0, 200) })); }, 1400);
+  }
+  componentWillUnmount() { clearInterval(this.tick); clearInterval(this.logTick); clearTimeout(this.tt); }
+  componentDidUpdate(pp) {
+    if (pp.layout !== this.props.layout && this.props.layout) this.setState({ layout: this.props.layout });
+    if (pp.device !== this.props.device && this.props.device) this.setState({ device: this.props.device });
+  }
+  flash(msg) { clearTimeout(this.tt); this.setState({ toast: msg }); this.tt = setTimeout(() => this.setState({ toast: '' }), 2600); }
+  go(screen, extra = {}) { this.setState({ screen, moreOpen: false, ...extra }); }
+
+  renderVals() {
+    const st = this.state;
+    const mob = st.device === 'mobile', desk = !mob;
+    const seg = on => ({ padding: '7px 11px', font: `600 10px/1 ${M}`, letterSpacing: '.14em', cursor: 'pointer', color: on ? '#0B0B0C' : '#8E8C86', background: on ? '#E8E6E1' : 'transparent', whiteSpace: 'nowrap' });
+    const chip = on => ({ padding: '8px 11px', border: '1px solid ' + (on ? '#D8452B' : '#2E2E33'), font: `600 10px/1 ${M}`, letterSpacing: '.12em', color: on ? '#F0765C' : '#8E8C86', background: on ? 'rgba(216,69,43,.08)' : 'transparent', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '7px' });
+    const tag = (c, fill) => ({ padding: '4px 6px', border: '1px solid ' + c, font: `600 9px/1 ${M}`, letterSpacing: '.1em', color: fill ? '#0B0B0C' : c, background: fill ? c : 'transparent', whiteSpace: 'nowrap', flex: 'none' });
+    const lvlC = l => l === 'ERROR' ? ERR : l === 'WARN' ? WARN : '#6E6C67';
+    const codeC = c => /^(OK|2\d\d)$/.test(c) ? '#6E6C67' : /^(5\d\d|Internal|Unavailable)$/.test(c) ? ERR : WARN;
+
+    const pendingMod = st.mod.filter(m => m.state === 'pending').length;
+    const activeSess = st.sessions.filter(s => s.status === 'ACTIVE').length;
+    const indexing = st.queue.filter(f => f.p < 100).length;
+    const errCount = st.logs.filter(l => l.lvl === 'ERROR').length;
+    const NAV = [
+      { id: 'overview', label: 'ОБЗОР', short: 'ОБ', count: '' },
+      { id: 'releases', label: 'РЕЛИЗЫ', short: 'РЛ', count: st.queue.length ? String(st.queue.length) : '', hot: indexing > 0 },
+      { id: 'catalog', label: 'КАТАЛОГ', short: 'КТ', count: String(st.albums.length) },
+      { id: 'users', label: 'ПОЛЬЗОВАТЕЛИ', short: 'ПЛ', count: String(st.users.length) },
+      { id: 'sessions', label: 'СЕССИИ', short: 'СС', count: String(activeSess) },
+      { id: 'moderation', label: 'МЕТКИ 18+', short: '18', count: pendingMod ? String(pendingMod) : '', hot: pendingMod > 0 },
+      { id: 'logs', label: 'ЛОГИ', short: 'ЛГ', count: errCount ? errCount + ' ERR' : '', hot: errCount > 0 },
+    ];
+    const nav = NAV.map((n, i) => {
+      const a = st.screen === n.id;
+      return {
+        ...n, go: () => this.go(n.id),
+        countStyle: { font: `500 10px/1 ${M}`, color: n.hot ? '#F0765C' : '#4E4C48' },
+        sideStyle: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 18px 12px 16px', cursor: 'pointer', color: a ? '#E8E6E1' : '#8E8C86', background: a ? '#17171A' : 'transparent', borderLeft: '2px solid ' + (a ? '#D8452B' : 'transparent') },
+        railStyle: { height: '58px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', color: a ? '#E8E6E1' : '#8E8C86', background: a ? '#17171A' : 'transparent', borderLeft: '2px solid ' + (a ? '#D8452B' : 'transparent') },
+        tabStyle: { display: 'flex', alignItems: 'center', gap: '8px', padding: '15px 12px 13px', font: `600 11px/1 ${M}`, letterSpacing: '.1em', cursor: 'pointer', whiteSpace: 'nowrap', color: a ? '#E8E6E1' : '#8E8C86', borderBottom: '2px solid ' + (a ? '#D8452B' : 'transparent') },
+      };
+    });
+    const moreIds = ['sessions', 'moderation', 'logs'];
+    const moreActive = moreIds.includes(st.screen);
+    const mobItem = (n, a, go) => ({ ...n, go, style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', padding: '11px 0 14px', cursor: 'pointer', color: a ? '#E8E6E1' : '#6E6C67', borderTop: '2px solid ' + (a ? '#D8452B' : 'transparent'), marginTop: '-1px' } });
+    const mobileNav = [
+      ...nav.slice(0, 4).map(n => mobItem({ short: n.short, label: n.id === 'users' ? 'ЛЮДИ' : n.label }, st.screen === n.id && !st.moreOpen, n.go)),
+      mobItem({ short: '··', label: 'ЕЩЁ' }, moreActive || st.moreOpen, () => this.setState({ moreOpen: !st.moreOpen })),
+    ];
+
+    const PAGES = {
+      overview: ['01 · ОБЗОР', 'Состояние узла', 'Сервисы, хранилище и то, что требует внимания.'],
+      releases: ['02 · ЗАГРУЗКА', 'Релизы', 'Файлы индексируются, затем собираются в релиз. Сингл — это альбом с одним треком.'],
+      catalog: ['03 · КАТАЛОГ', 'Каталог', 'Метаданные релизов и треков, метки 18+ на уровне трека.'],
+      users: ['04 · ДОСТУП', 'Пользователи', 'Аккаунты на этом узле. Возраст считается по дате рождения при регистрации.'],
+      sessions: ['05 · ДОСТУП', 'Сессии', 'Refresh-токены · RS256 · ротация при каждом /refresh · TTL 30 дней.'],
+      moderation: ['06 · МЕТКИ', 'Метки 18+', 'Метка ничего не скрывает — она лишь ограничивает показ аккаунтам младше 18 лет.'],
+      logs: ['07 · ЛОГИ', 'Логи', 'gRPC-вызовы между сервисами и HTTP-запросы Gateway · последние 200 записей.'],
+    };
+    const pg = PAGES[st.screen];
+
+    const SVC = [
+      { name: 'gateway', key: 'gateway', proto: 'HTTP :8080 · chi', lat: 'p50 11 ms', up: 99.97, s: 'UP', note: 'uptime 18 д 4 ч' },
+      { name: 'user_service', key: 'user_service', proto: 'gRPC :50051', lat: 'p50 6 ms', up: 99.99, s: 'UP', note: 'uptime 18 д 4 ч' },
+      { name: 'catalog_service', key: 'catalog_service', proto: 'gRPC :50052', lat: 'p50 4 ms', up: 99.95, s: 'UP', note: indexing ? `индексирует · ${indexing} в очереди` : 'uptime 6 д 11 ч' },
+      { name: 'streaming_service', key: 'streaming_service', proto: 'gRPC :50053', lat: 'p95 412 ms', up: 97.2, s: 'DEGRADED', note: 'buffer underrun ×3 за час' },
+      { name: 'postgres_users', proto: 'TCP :5432', lat: '42 conn', up: 100, s: 'UP', note: 'pg 16.4' },
+      { name: 'postgres_catalog', proto: 'TCP :5433', lat: '18 conn', up: 100, s: 'UP', note: 'pg 16.4' },
+      { name: 'redis_users_sessions', proto: 'TCP :6379 · auth', lat: '11 keys/s', up: 100, s: 'UP', note: `${activeSess} активных семей` },
+      { name: 'redis_catalog_cache', proto: 'TCP :6380 · auth', lat: 'hit 94%', up: 100, s: 'UP', note: '312 MB' },
+    ];
+    const services = SVC.map(s => {
+      const c = s.s === 'UP' ? OK : s.s === 'DEGRADED' ? WARN : ERR;
+      return { ...s, status: s.s, badgeStyle: tag(c), barStyle: { height: '2px', width: s.up + '%', background: c }, go: () => this.go('logs', { svcFilter: s.key || 'ALL', lvlFilter: 'ALL' }) };
+    });
+    const trackCount = st.albums.reduce((a, b) => a + b.tracks.length, 0);
+    const counters = [
+      { label: 'РЕЛИЗОВ', value: String(st.albums.length), sub: `${trackCount} треков`, go: () => this.go('catalog') },
+      { label: 'ПОЛЬЗОВАТЕЛЕЙ', value: String(st.users.length), sub: `${st.users.filter(u => ageOf(u.birth) < 18).length} младше 18`, go: () => this.go('users') },
+      { label: 'АКТИВНЫХ СЕССИЙ', value: String(activeSess), sub: `${st.sessions.filter(s => s.status === 'REUSE').length} инцидент reuse`, go: () => this.go('sessions') },
+      { label: 'НА МОДЕРАЦИИ', value: String(pendingMod), sub: 'метки 18+', go: () => this.go('moderation') },
+    ];
+    const alerts = st.logs.filter(l => l.lvl !== 'INFO').slice(0, 5).map(l => ({ ...l, lvlStyle: { color: lvlC(l.lvl), flex: 'none', width: '42px' } }));
+
+    const readyAudio = st.queue.filter(f => f.p >= 100 && !f.cover);
+    const readyAll = st.queue.filter(f => f.p >= 100);
+    const takeFiles = files => {
+      const ids = new Set(files.map(f => f.id));
+      const tracks = files.filter(f => !f.cover).map(f => ({ id: f.id, title: f.title, dur: f.dur, file: f }));
+      this.setState(s => ({ queue: s.queue.filter(f => !ids.has(f.id)), draft: { ...s.draft, tracks: [...s.draft.tracks, ...tracks], cover: s.draft.cover || files.some(f => f.cover) } }));
+    };
+    const queue = st.queue.map(f => {
+      const sg = stageOf(f.p), ready = f.p >= 100;
+      return {
+        ...f, ready, stageLabel: STAGES[sg] + (ready ? '' : ' ' + Math.floor(f.p) + '%'),
+        meta: f.cover ? `${f.size} · обложка 1400×1400` : `${f.size} · ${ready ? f.dur + ' · 24/96' : 'FLAC'}`,
+        stageStyle: { font: `600 9px/1 ${M}`, letterSpacing: '.12em', color: ready ? OK : '#8E8C86', whiteSpace: 'nowrap' },
+        barStyle: { height: '2px', width: f.p + '%', background: ready ? '#3A3A40' : '#D8452B', transition: 'width .4s' },
+        add: () => takeFiles([f]),
+      };
+    });
+    const d = st.draft;
+    const setD = k => e => { const v = e.target.value; this.setState(s => ({ draft: { ...s.draft, [k]: v } })); };
+    const totalSec = d.tracks.reduce((a, t) => a + durSec(t.dur), 0);
+    const canPublish = d.tracks.length > 0 && d.title.trim();
+    const canAdd = readyAll.length > 0;
+
+    const catQ = st.catQuery.toLowerCase();
+    const albumsF = st.albums.filter(a => {
+      if (catQ && !(a.title + ' ' + a.artist).toLowerCase().includes(catQ)) return false;
+      if (st.catFilter === '18+') return a.tracks.some(t => t.explicit);
+      if (st.catFilter === 'ВСЕ') return true;
+      return a.type === st.catFilter;
+    });
+    const albums = albumsF.map(a => {
+      const on = st.edit && st.edit.id === a.id;
+      return {
+        ...a, explicit: a.tracks.some(t => t.explicit),
+        initials: a.title.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase(),
+        meta: `${a.artist} · ${a.year} · ${a.type} · ${a.tracks.length} тр`,
+        coverStyle: { width: '44px', height: '44px', flex: 'none', background: `oklch(0.34 0.07 ${a.hue})`, display: 'flex', alignItems: 'center', justifyContent: 'center', font: `700 12px/1 ${M}`, color: `oklch(0.82 0.06 ${a.hue})` },
+        rowStyle: { display: 'flex', alignItems: 'center', gap: '14px', padding: '11px 12px', borderBottom: '1px solid #17171B', cursor: 'pointer', background: on ? '#17171A' : 'transparent', boxShadow: on ? 'inset 2px 0 0 #D8452B' : 'none' },
+        select: () => this.setState({ edit: JSON.parse(JSON.stringify(a)) }),
+      };
+    });
+    const ed = st.edit;
+    const setE = k => e => { const v = e.target.value; this.setState(s => ({ edit: { ...s.edit, [k]: v } })); };
+    const setTrack = (id, patch) => this.setState(s => ({ edit: { ...s.edit, tracks: s.edit.tracks.map(t => t.id === id ? { ...t, ...patch } : t) } }));
+    const typesFor = (cur, set) => ['АЛЬБОМ', 'EP', 'СИНГЛ'].map(t => ({ label: t, style: { ...seg(cur === t), padding: '8px 10px' }, pick: () => set(t) }));
+
+    const uq = st.userQuery.toLowerCase();
+    const users = st.users.filter(u => !uq || u.login.includes(uq)).map(u => {
+      const age = ageOf(u.birth), minor = age < 18, sc = st.sessions.filter(s => s.user === u.login && s.status === 'ACTIVE').length;
+      return {
+        ...u, ageLabel: `${age} ${age % 10 === 1 && age !== 11 ? 'год' : [2, 3, 4].includes(age % 10) && ![12, 13, 14].includes(age) ? 'года' : 'лет'}`,
+        access: minor ? 'МЕТКИ 18+ ОГРАНИЧЕНЫ' : 'ПОЛНЫЙ КАТАЛОГ',
+        accessStyle: { font: `600 9px/1 ${M}`, letterSpacing: '.1em', color: minor ? WARN : '#6E6C67' },
+        roleStyle: tag(u.role === 'OWNER' ? '#D8452B' : '#4E4C48'),
+        sessLabel: `${sc} сесс.`, status: u.blocked ? 'ЗАБЛОКИРОВАН' : 'АКТИВЕН',
+        statusStyle: { font: `600 9px/1 ${M}`, letterSpacing: '.1em', color: u.blocked ? ERR : OK, whiteSpace: 'nowrap' },
+        canBlock: u.role !== 'OWNER', action: u.blocked ? 'РАЗБЛОК' : 'БЛОК',
+        rowStyle: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 20px', padding: '15px 0', borderBottom: '1px solid #17171B', opacity: u.blocked ? 0.6 : 1 },
+        goSessions: () => this.go('sessions', { sessUser: u.login, sessFilter: 'ВСЕ' }),
+        toggle: () => {
+          const blocking = !u.blocked;
+          this.setState(s => ({ users: s.users.map(x => x.id === u.id ? { ...x, blocked: blocking } : x), sessions: blocking ? s.sessions.map(x => x.user === u.login && x.status === 'ACTIVE' ? { ...x, status: 'REVOKED' } : x) : s.sessions }));
+          this.flash(blocking ? `${u.login} заблокирован · сессии отозваны` : `${u.login} разблокирован`);
+        },
+      };
+    });
+
+    const sessions = st.sessions.filter(s => (!st.sessUser || s.user === st.sessUser) && (st.sessFilter === 'ВСЕ' || (st.sessFilter === 'АКТИВНЫЕ' ? s.status === 'ACTIVE' : s.status !== 'ACTIVE'))).map(s => {
+      const c = s.status === 'ACTIVE' ? OK : s.status === 'REUSE' ? ERR : '#4E4C48';
+      return {
+        ...s, current: !!s.current, reuse: s.status === 'REUSE', canRevoke: s.status === 'ACTIVE' && !s.current,
+        statusLabel: s.status === 'ACTIVE' ? 'АКТИВНА' : s.status === 'REUSE' ? 'REUSE' : 'ОТОЗВАНА', statusStyle: tag(c),
+        rowStyle: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 20px', padding: '15px 0', borderBottom: '1px solid #17171B', opacity: s.status === 'REVOKED' ? 0.55 : 1 },
+        revoke: () => { this.setState(x => ({ sessions: x.sessions.map(y => y.id === s.id ? { ...y, status: 'REVOKED', exp: '—' } : y) })); this.flash(`Семья ${s.fam} отозвана`); },
+      };
+    });
+
+    const modItems = st.mod.filter(m => st.modFilter === 'ВСЕ' || (st.modFilter === 'ОЧЕРЕДЬ' ? m.state === 'pending' : m.state !== 'pending')).map(m => {
+      const setM = state => this.setState(s => ({ mod: s.mod.map(x => x.id === m.id ? { ...x, state } : x) }));
+      return {
+        ...m, pending: m.state === 'pending', done: m.state !== 'pending',
+        result: m.state === 'marked' ? '18+' : 'БЕЗ МЕТКИ', resultStyle: tag(m.state === 'marked' ? '#D8452B' : '#4E4C48'),
+        mark: () => { setM('marked'); this.flash(`«${m.track}» помечен 18+`); }, clear: () => setM('cleared'), undo: () => setM('pending'),
+      };
+    });
+
+    const logsF = st.logs.filter(l => (st.svcFilter === 'ALL' || l.svc === st.svcFilter) && (st.lvlFilter === 'ALL' || (st.lvlFilter === 'WARN+' ? l.lvl !== 'INFO' : l.lvl === st.lvlFilter)));
+    const logRow = l => ({ ...l, ms: l.ms + 'ms', lvlStyle: { color: lvlC(l.lvl), flex: '0 0 40px', fontWeight: 600 }, codeStyle: { color: codeC(l.code), flex: '0 0 auto' } });
+
+    const hoverAccent = { background: '#F0563A' };
+    return {
+      layoutTabs: [['A', 'SIDEBAR'], ['B', 'TABS'], ['C', 'CONSOLE']].map(([k, l]) => ({ label: `${k} · ${l}`, style: seg(st.layout === k), pick: () => this.setState({ layout: k }) })),
+      tabDesktop: seg(desk), tabMobile: seg(mob),
+      setDesktop: () => this.setState({ device: 'desktop', moreOpen: false }), setMobile: () => this.setState({ device: 'mobile' }),
+      isMobile: mob, showSidebar: desk && st.layout === 'A', showTabs: desk && st.layout === 'B', showRail: desk && st.layout === 'C', showDock: desk && st.layout === 'C',
+      stageStyle: mob ? { flex: 1, minHeight: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '24px', background: '#08080A' } : { flex: 1, minHeight: 0, display: 'flex' },
+      frameStyle: mob ? { width: '390px', height: 'min(820px, 100%)', border: '1px solid #2A2A2E', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', background: '#0B0B0C' } : { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', position: 'relative' },
+      padStyle: mob ? { padding: '20px 16px 28px' } : { padding: st.layout === 'B' ? '30px 40px 48px' : '30px 34px 48px', maxWidth: st.layout === 'B' ? '1320px' : 'none', margin: '0 auto' },
+      h1Style: { margin: 0, font: `700 ${mob ? 28 : 36}px/1 Manrope`, letterSpacing: '-.025em' },
+      nav, mobileNav, moreNav: nav.filter(n => moreIds.includes(n.id)), moreOpen: st.moreOpen, closeMore: () => this.setState({ moreOpen: false }),
+      svcUpLabel: `${services.filter(s => s.status === 'UP').length}/${services.length} UP`,
+      page: { code: pg[0], title: pg[1], sub: pg[2] },
+      onOverview: st.screen === 'overview', onReleases: st.screen === 'releases', onCatalog: st.screen === 'catalog', onUsers: st.screen === 'users', onSessions: st.screen === 'sessions', onModeration: st.screen === 'moderation', onLogs: st.screen === 'logs',
+      counters, services, alerts,
+      indexingLabel: indexing ? `Индексация: ${indexing} файл(а) в работе` : `Очередь: ${st.queue.length} файл(ов) ждут релиза`,
+      goReleases: () => this.go('releases'), goLogsAll: () => this.go('logs', { svcFilter: 'ALL', lvlFilter: 'ALL' }),
+
+      queue, queueCount: st.queue.length, queueEmpty: st.queue.length === 0,
+      addFiles: () => { if (st.batchB) { this.flash('Демо: больше файлов нет'); return; } this.setState(s => ({ queue: [...s.queue, ...mkFiles(FILES_B)], batchB: true })); },
+      draft: d, onDraftTitle: setD('title'), onDraftArtist: setD('artist'), onDraftYear: setD('year'),
+      draftTypes: typesFor(d.type, t => this.setState(s => ({ draft: { ...s.draft, type: t } }))),
+      typeNote: d.type === 'СИНГЛ' ? (d.tracks.length > 1 ? `Сингл — тот же альбом. Сейчас ${d.tracks.length} трека: можно оставить би-сайды или сменить тип.` : 'Сингл — тот же альбом, просто с одним треком. Тип влияет только на подпись в клиенте.') : 'Все проиндексированные файлы из очереди можно добавить в релиз одним действием.',
+      coverStyle: { width: '96px', height: '96px', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', font: `600 9px/1.4 ${M}`, letterSpacing: '.1em', color: d.cover ? '#E8C9A0' : '#4E4C48', background: d.cover ? 'oklch(0.32 0.07 45)' : 'transparent', border: d.cover ? 'none' : '1px dashed #2E2E33', padding: '8px' },
+      coverLabel: d.cover ? 'COVER.JPG' : 'НЕТ ОБЛОЖКИ',
+      addAll: () => { if (canAdd) { takeFiles(readyAll); this.flash(`В релиз добавлено: ${readyAudio.length} тр.`); } },
+      addAllLabel: canAdd ? `+ ДОБАВИТЬ ВСЕ ГОТОВЫЕ В РЕЛИЗ · ${readyAudio.length}` : (indexing ? `ЖДЁМ ИНДЕКСАЦИЮ · ${indexing}` : 'НЕТ ГОТОВЫХ ФАЙЛОВ'),
+      addAllStyle: { padding: '14px 0', textAlign: 'center', font: `700 11px/1 ${M}`, letterSpacing: '.14em', cursor: canAdd ? 'pointer' : 'default', color: canAdd ? '#E8E6E1' : '#4E4C48', border: '1px solid ' + (canAdd ? '#E8E6E1' : '#26262A'), userSelect: 'none' },
+      addAllHover: canAdd ? { background: '#E8E6E1', color: '#0B0B0C' } : {},
+      draftTracks: d.tracks.map((t, i) => ({ ...t, n: pad(i + 1), remove: () => this.setState(s => ({ draft: { ...s.draft, tracks: s.draft.tracks.filter(x => x.id !== t.id) }, queue: [...s.queue, t.file] })) })),
+      draftEmpty: d.tracks.length === 0,
+      draftSummary: d.tracks.length ? `${d.tracks.length} тр · ${fmtDur(totalSec)}` : '0 тр',
+      publishStyle: { padding: '13px 20px', background: canPublish ? '#D8452B' : '#1E1E22', color: canPublish ? '#0B0B0C' : '#4E4C48', font: `700 11px/1 ${M}`, letterSpacing: '.16em', cursor: canPublish ? 'pointer' : 'default', userSelect: 'none' },
+      publishHover: canPublish ? hoverAccent : {},
+      publish: () => {
+        if (!canPublish) return;
+        const id = 'rel_0' + (113 + st.albums.length);
+        const alb = { id, title: d.title, artist: d.artist || '—', year: d.year, genre: '', type: d.type, hue: 45, tracks: d.tracks.map(t => ({ id: 't' + t.id, title: t.title, dur: t.dur, explicit: false })) };
+        this.setState(s => ({ albums: [alb, ...s.albums], draft: { title: '', artist: '', year: '2026', type: 'АЛЬБОМ', tracks: [], cover: false } }));
+        this.flash(`«${d.title}» опубликован · ${id}`);
+      },
+
+      catQuery: st.catQuery, onCatQuery: e => this.setState({ catQuery: e.target.value }),
+      catFilters: ['ВСЕ', 'АЛЬБОМ', 'EP', 'СИНГЛ', '18+'].map(f => ({ label: f, style: chip(st.catFilter === f), pick: () => this.setState({ catFilter: f }) })),
+      albums, hasEdit: !!ed, noEdit: !ed && desk, edit: ed || {},
+      closeEdit: () => this.setState({ edit: null }),
+      onEditTitle: setE('title'), onEditArtist: setE('artist'), onEditYear: setE('year'), onEditGenre: setE('genre'),
+      editTypes: ed ? typesFor(ed.type, t => this.setState(s => ({ edit: { ...s.edit, type: t } }))) : [],
+      editTrackCount: ed ? ed.tracks.length : 0,
+      editTracks: ed ? ed.tracks.map((t, i) => ({ ...t, n: pad(i + 1), onTitle: e => setTrack(t.id, { title: e.target.value }), toggle: () => setTrack(t.id, { explicit: !t.explicit }), flagLabel: t.explicit ? '18+' : '—', flagStyle: { textAlign: 'center', padding: '6px 0', font: `600 10px/1 ${M}`, cursor: 'pointer', border: '1px solid ' + (t.explicit ? '#D8452B' : '#2E2E33'), color: t.explicit ? '#F0765C' : '#4E4C48' } })) : [],
+      resetEdit: () => this.setState({ edit: JSON.parse(JSON.stringify(st.albums.find(a => a.id === ed.id))) }),
+      saveEdit: () => { this.setState(s => ({ albums: s.albums.map(a => a.id === ed.id ? JSON.parse(JSON.stringify(ed)) : a) })); this.flash(`Сохранено · UpdateAlbum ${ed.id}`); },
+
+      userQuery: st.userQuery, onUserQuery: e => this.setState({ userQuery: e.target.value }), users,
+      usersSummary: `${st.users.length} аккаунтов · ${st.users.filter(u => u.blocked).length} заблокирован`,
+      sessions, sessUser: st.sessUser, clearSessUser: () => this.setState({ sessUser: '' }),
+      sessFilters: ['ВСЕ', 'АКТИВНЫЕ', 'ОТОЗВАННЫЕ'].map(f => ({ label: f, style: chip(st.sessFilter === f), pick: () => this.setState({ sessFilter: f }) })),
+      revokeOthers: () => { const n = st.sessions.filter(s => s.status === 'ACTIVE' && !s.current).length; this.setState(s => ({ sessions: s.sessions.map(x => x.status === 'ACTIVE' && !x.current ? { ...x, status: 'REVOKED', exp: '—' } : x) })); this.flash(`Отозвано сессий: ${n}`); },
+      modFilters: ['ОЧЕРЕДЬ', 'РЕШЁННЫЕ', 'ВСЕ'].map(f => ({ label: f, style: chip(st.modFilter === f), pick: () => this.setState({ modFilter: f }) })),
+      modItems, modEmpty: modItems.length === 0,
+      svcFilters: [['ALL', 'ВСЕ'], ['gateway', 'GATEWAY'], ['user_service', 'USER'], ['catalog_service', 'CATALOG'], ['streaming_service', 'STREAM']].map(([k, l]) => ({ label: l, style: chip(st.svcFilter === k), pick: () => this.setState({ svcFilter: k }) })),
+      lvlFilters: [['ALL', 'ВСЕ УРОВНИ'], ['WARN+', 'WARN+'], ['ERROR', 'ERROR']].map(([k, l]) => ({ label: l, style: chip(st.lvlFilter === k), pick: () => this.setState({ lvlFilter: k }) })),
+      toggleLive: () => this.setState({ live: !st.live }),
+      liveLabel: st.live ? 'LIVE' : 'ПАУЗА', liveStyle: { ...chip(st.live), marginLeft: 'auto' },
+      liveDot: { width: '6px', height: '6px', background: st.live ? '#D8452B' : '#4E4C48', animation: st.live ? 'pv-blink 1.4s infinite' : 'none' },
+      logRows: logsF.slice(0, mob ? 40 : 80).map(logRow), logsEmpty: logsF.length === 0,
+      dockRows: st.logs.slice(0, 7).map(logRow),
+      toast: st.toast,
+      hoverNav: { color: '#E8E6E1', background: '#141417' }, hoverTab: { borderColor: '#4A4A50', color: '#E8E6E1' }, hoverText: { color: '#E8E6E1' },
+      hoverRow: { background: '#131316' }, hoverCard: { borderColor: '#3A3A40' }, hoverDrop: { borderColor: '#D8452B', background: '#121214' },
+      hoverInput: { borderColor: '#26262A' }, hoverDanger: { background: 'rgba(216,69,43,.12)' }, hoverAccent,
+      focusRing: { borderColor: '#D8452B' },
+    };
+  }
+}
+</script>
+</body>
+</html>
